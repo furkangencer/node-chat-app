@@ -20,11 +20,14 @@ io.on('connection', (socket) => {
     //This will send the event to anybody but this socket
     socket.broadcast.emit('newMessage', generateMessage('Admin', 'New user joined'));
 
-    socket.on('createMessage', (message) => {
+    socket.on('createMessage', (message, callback) => {
         console.log('createMessage', message);
 
         //This will send the event to everybody
         io.emit('newMessage', generateMessage(message.from, message.text))
+
+        //Acknowledgement - Tell the client that server has received the message.
+        callback('This is from the server');
     });
 
     socket.on('disconnect', () => {
