@@ -20,7 +20,10 @@ io.on('connection', (socket) => {
     console.log('New user connected');
 
     socket.on('join', (params, callback) => {
-        if (!isRealString(params.name) || !isRealString(params.room)) {
+        params.name = params.name.replace(/ /g,''); // Remove spaces
+        if(users.users.filter((user) => user.name === params.name && user.room === params.room).length !== 0){
+            return callback('Name already taken in this room.')
+        }else if (!isRealString(params.name) || !isRealString(params.room)) {
             return callback('Name and room name are reqired. ');
         }
 
@@ -41,18 +44,20 @@ io.on('connection', (socket) => {
     });
     
     socket.on('createMessage', (message, callback) => {
-        console.log('createMessage', message);
-
-        //This will send the event to everybody
-        io.emit('newMessage', generateMessage(message.from, message.text));
+        var user = users.getUser(socket.id);
+        if(user && isRealString(message.text)) {
+            io.to(user.room).emit('newMessage', generateMessage(user.name, message.text));
+        }
 
         //Acknowledgement - Tell the client that server has received the message.
         callback(); //callback('This is from the server');
     });
 
     socket.on('createLocationMessage', (coords) => {
-        console.log(generateLocationMessage('Admin', coords.latitude, coords.longitude));
-        io.emit('newLocationMessage', generateLocationMessage('Admin', coords.latitude, coords.longitude));
+        var user = users.getUser(socket.id);
+        if(user) {
+            io.to(user.room).emit('newLocationMessage', generateLocationMessage(user.name, coords.latitude, coords.longitude));
+        }
     });
 
     socket.on('disconnect', () => {
