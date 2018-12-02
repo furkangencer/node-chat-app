@@ -20,7 +20,8 @@ io.on('connection', (socket) => {
     console.log('New user connected');
 
     socket.on('join', (params, callback) => {
-        params.name = params.name.replace(/ /g,''); // Remove spaces
+        params.name = params.name.toLowerCase().replace(/ /g,''); // Lower case and remove spaces
+        params.room = params.room.toLowerCase().replace(/ /g,''); // Lower case and remove spaces
         if(users.users.filter((user) => user.name === params.name && user.room === params.room).length !== 0){
             return callback('Name already taken in this room.')
         }else if (!isRealString(params.name) || !isRealString(params.room)) {
